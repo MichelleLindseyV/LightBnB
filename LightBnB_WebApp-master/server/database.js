@@ -18,10 +18,10 @@ const users = require('./json/users.json');
  * @param {String} email The email of the user.
  * @return {Promise<{}>} A promise to the user.
  */
-const getUserWithEmail = function(email) {
+const getUserWithEmail = (email) => {
+  const userQuery = `SELECT * FROM users WHERE email = $1`
 
-  return pool
-    .query(`SELECT name FROM users WHERE email = $1`, [email])
+  return pool.query(userQuery, [email])
     .then((result) => {
       return result.rows;
     })
@@ -37,10 +37,10 @@ const getUserWithEmail = function(email) {
  * @param {string} id The id of the user.
  * @return {Promise<{}>} A promise to the user.
  */
-const getUserWithId = function(id) {
+const getUserWithId = (id) => {
+  const userQuery = `SELECT * FROM users WHERE id = $1`
   
-  return pool
-    .query(`SELECT name FROM users WHERE users.id = $1`, [id])
+  return pool.query(userQuery, [id])
     .then((result) => {
       return result.rows;
     })
@@ -56,12 +56,16 @@ exports.getUserWithId = getUserWithId;
  * @param {{name: string, password: string, email: string}} user
  * @return {Promise<{}>} A promise to the user.
  */
-const addUser =  function(user) {
+const addUser = (name, password, email) => {
+  const insertQuery = `INSERT INTO users (name, password, email)
+  VALUES ($1, $2, $3)
+  RETURNING *`
 
-  return pool
-  .query(`INSERT INTO users VALUES $1 RETURNING *`, [user])
+  const values = [name, password, email];
+
+  return pool.query(insertQuery, values)
   .then((result) => {
-    console.log(result.rows);
+    return (result.rows)
   })
   .catch((err) => {
     console.log("error:", err.message);
@@ -81,8 +85,17 @@ exports.addUser = addUser;
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  return getAllProperties(null, 2);
-}
+  const reservationQuery = `SELECT * FROM reservations WHERE guest_id = $1 LIMIT $2`
+  
+  return pool.query(reservationQuery, [guest_id, limit])
+  .then((result) => {
+    return (result.rows)
+  })
+  .catch((err) => {
+    console.log(err.message);
+  });
+  // return getAllProperties(null, 2);
+};
 exports.getAllReservations = getAllReservations;
 
 /// Properties
